@@ -1,0 +1,48 @@
+diff -u st-0.7/config.def.h st-0.7.fade/config.def.h
+--- st-0.7/config.def.h	2016-08-11 16:25:58.000000000 +0200
++++ st-0.7.fade/config.def.h	2016-10-13 20:24:27.658576787 +0200
+@@ -120,6 +120,7 @@
+ static unsigned int defaultbg = 0;
+ static unsigned int defaultcs = 256;
+ static unsigned int defaultrcs = 257;
++static unsigned int defaultfading = 8;
+ 
+ /*
+  * Default shape of cursor
+Only in st-0.7.fade/: st
+diff -u st-0.7/st.c st-0.7.fade/st.c
+--- st-0.7/st.c	2016-08-11 16:25:58.000000000 +0200
++++ st-0.7.fade/st.c	2016-10-13 20:25:08.255233758 +0200
+@@ -532,6 +532,7 @@
+ static char *opt_name  = NULL;
+ static char *opt_title = NULL;
+ static int oldbutton   = 3; /* button event on startup: 3 = release */
++static int lostfocus   = 0;
+ 
+ static char *usedfont = NULL;
+ static double usedfontsize = 0;
+@@ -3767,6 +3768,9 @@
+ 	if (base.mode & ATTR_INVISIBLE)
+ 		fg = bg;
+ 
++	if (lostfocus)
++		fg = &dc.col[defaultfading];
++
+ 	/* Intelligent cleaning up of the borders. */
+ 	if (x == 0) {
+ 		xclear(0, (y == 0)? 0 : winy, borderpx,
+@@ -4292,6 +4296,14 @@
+ 					(handler[ev.type])(&ev);
+ 			}
+ 
++			if (!(xw.state & WIN_FOCUSED)) {
++				lostfocus = 1;
++				redraw();
++			} else {
++				lostfocus = 0;
++				redraw();
++			}
++
+ 			draw();
+ 			XFlush(xw.dpy);
+ 
