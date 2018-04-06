@@ -1,0 +1,47 @@
+diff -urN st-0.8.1.orig/config.def.h st-0.8.1/config.def.h
+--- st-0.8.1.orig/config.def.h	2018-04-06 09:08:26.008600565 +0200
++++ st-0.8.1/config.def.h	2018-04-06 09:15:40.810351045 +0200
+@@ -120,6 +120,7 @@
+ unsigned int defaultbg = 0;
+ static unsigned int defaultcs = 256;
+ static unsigned int defaultrcs = 257;
++static unsigned int defaultfading = 8;
+ 
+ /*
+  * Default shape of cursor
+diff -urN st-0.8.1.orig/x.c st-0.8.1/x.c
+--- st-0.8.1.orig/x.c	2018-04-06 09:08:26.008600565 +0200
++++ st-0.8.1/x.c	2018-04-06 09:43:03.800965608 +0200
+@@ -239,6 +239,7 @@
+ static char *opt_title = NULL;
+ 
+ static int oldbutton = 3; /* button event on startup: 3 = release */
++static int lostfocus = 0;
+ 
+ void
+ clipcopy(const Arg *dummy)
+@@ -1344,6 +1345,9 @@
+ 	if (base.mode & ATTR_INVISIBLE)
+ 		fg = bg;
+ 
++	if (lostfocus)
++		fg = &dc.col[defaultfading];
++
+ 	/* Intelligent cleaning up of the borders. */
+ 	if (x == 0) {
+ 		xclear(0, (y == 0)? 0 : winy, borderpx,
+@@ -1840,6 +1844,14 @@
+ 					(handler[ev.type])(&ev);
+ 			}
+ 
++			if (win.mode & MODE_FOCUSED) {
++				printf("lost focus\n");
++				redraw();
++			} else {
++				lostfocus = 1;
++				redraw();
++			}
++
+ 			draw();
+ 			XFlush(xw.dpy);
+ 
